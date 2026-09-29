@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using System.Text.RegularExpressions;
 
 namespace Ambev.DeveloperEvaluation.Domain.Validation;
@@ -8,6 +8,7 @@ public class EmailValidator : AbstractValidator<string>
     public EmailValidator()
     {
         RuleFor(email => email)
+            .Cascade(CascadeMode.Stop)
             .NotEmpty()
             .WithMessage("The email address cannot be empty.")
             .MaximumLength(100)

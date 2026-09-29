@@ -13,9 +13,9 @@ public class CreateUserResponse
     public Guid Id { get; set; }
 
     /// <summary>
-    /// The user's full name
+    /// The user's username
     /// </summary>
-    public string Name { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
 
     /// <summary>
     /// The user's email address
