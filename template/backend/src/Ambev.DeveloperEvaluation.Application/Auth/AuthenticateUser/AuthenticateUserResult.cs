@@ -16,9 +16,9 @@ public sealed class AuthenticateUserResult
     public Guid Id { get; set; }
 
     /// <summary>
-    /// Gets or sets the user's name
+    /// Gets or sets the user's username
     /// </summary>
-    public string Name { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the user's email address

@@ -64,6 +64,12 @@ public class ExceptionHandlingMiddleware
             Error = "Business rule violated",
             Detail = domain.Message
         }),
+        UnauthorizedAccessException unauthorized => (StatusCodes.Status401Unauthorized, new ApiErrorResponse
+        {
+            Type = "AuthenticationError",
+            Error = "Authentication failed",
+            Detail = unauthorized.Message
+        }),
         KeyNotFoundException notFound => (StatusCodes.Status404NotFound, new ApiErrorResponse
         {
             Type = "ResourceNotFound",
