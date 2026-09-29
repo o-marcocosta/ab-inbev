@@ -1,0 +1,46 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: template/backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore Ambev.DeveloperEvaluation.sln
+
+      - name: Build
+        run: dotnet build Ambev.DeveloperEvaluation.sln --no-restore --configuration Release
+
+      - name: Test
+        run: >
+          dotnet test Ambev.DeveloperEvaluation.sln
+          --no-build --configuration Release
+          --logger "trx;LogFileName=test-results.trx"
+          --results-directory ./TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: template/backend/TestResults

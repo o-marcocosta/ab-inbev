@@ -363,3 +363,8 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 .idea
+
+# Local configuration / secrets (use the *.example files as templates)
+**/appsettings.Development.json
+.env
+.vscode/*

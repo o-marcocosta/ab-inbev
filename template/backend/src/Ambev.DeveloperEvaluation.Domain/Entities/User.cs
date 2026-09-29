@@ -14,8 +14,8 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities;
 public class User : BaseEntity, IUser
 {
     /// <summary>
-    /// Gets the user's full name.
-    /// Must not be null or empty and should contain both first and last names.
+    /// Gets the user's username.
+    /// Must not be null or empty and must be between 3 and 50 characters.
     /// </summary>
     public string Username { get; set; } = string.Empty;
 
@@ -27,7 +27,7 @@ public class User : BaseEntity, IUser
 
     /// <summary>
     /// Gets the user's phone number.
-    /// Must be a valid phone number format following the pattern (XX) XXXXX-XXXX.
+    /// Must follow the E.164 international format (e.g. +5511999999999).
     /// </summary>
     public string Phone { get; set; } = string.Empty ;
 
@@ -46,7 +46,7 @@ public class User : BaseEntity, IUser
 
     /// <summary>
     /// Gets the user's current status.
-    /// Indicates whether the user is active, inactive, or blocked in the system.
+    /// Indicates whether the user is active, inactive, or suspended in the system.
     /// </summary>
     public UserStatus Status { get; set; }
 
@@ -135,8 +135,8 @@ public class User : BaseEntity, IUser
     }
 
     /// <summary>
-    /// Blocks the user account.
-    /// Changes the user's status to Blocked.
+    /// Suspends the user account.
+    /// Changes the user's status to Suspended.
     /// </summary>
     public void Suspend()
     {
