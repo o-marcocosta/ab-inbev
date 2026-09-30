@@ -1,4 +1,6 @@
 using Ambev.DeveloperEvaluation.Common.Validation;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System.Text.Json.Serialization;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Common;
 
@@ -10,6 +12,7 @@ public class ApiErrorResponse
 
     public string Detail { get; init; } = string.Empty;
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IEnumerable<ValidationErrorDetail>? Errors { get; init; }
 
     /// <summary>
@@ -28,4 +31,11 @@ public class ApiErrorResponse
             Errors = list
         };
     }
+
+    public static ApiErrorResponse FromModelState(ModelStateDictionary modelState) =>
+        ValidationError(modelState.SelectMany(entry => entry.Value!.Errors.Select(error => new ValidationErrorDetail
+        {
+            Error = entry.Key,
+            Detail = error.ErrorMessage
+        })));
 }

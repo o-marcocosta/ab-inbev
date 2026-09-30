@@ -2,8 +2,6 @@ using Ambev.DeveloperEvaluation.Common.Validation;
 using Ambev.DeveloperEvaluation.Domain.Exceptions;
 using Ambev.DeveloperEvaluation.WebApi.Common;
 using FluentValidation;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Middleware;
 
@@ -16,12 +14,6 @@ namespace Ambev.DeveloperEvaluation.WebApi.Middleware;
 /// </remarks>
 public class ExceptionHandlingMiddleware
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-    };
-
     private readonly RequestDelegate _next;
     private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
@@ -49,8 +41,7 @@ public class ExceptionHandlingMiddleware
                     context.Request.Method, context.Request.Path, statusCode, error.Detail);
 
             context.Response.StatusCode = statusCode;
-            context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(JsonSerializer.Serialize(error, JsonOptions));
+            await context.Response.WriteAsJsonAsync(error);
         }
     }
 
