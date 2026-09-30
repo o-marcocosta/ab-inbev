@@ -64,6 +64,12 @@ public class ExceptionHandlingMiddleware
             Error = "Business rule violated",
             Detail = domain.Message
         }),
+        ConcurrencyConflictException conflict => (StatusCodes.Status409Conflict, new ApiErrorResponse
+        {
+            Type = "ConcurrencyConflict",
+            Error = "Resource was modified",
+            Detail = conflict.Message
+        }),
         UnauthorizedAccessException unauthorized => (StatusCodes.Status401Unauthorized, new ApiErrorResponse
         {
             Type = "AuthenticationError",
