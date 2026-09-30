@@ -1,9 +1,10 @@
+using Ambev.DeveloperEvaluation.Application.Common.Persistence;
 using Ambev.DeveloperEvaluation.Application.Sales.Common;
 using MediatR;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
 
-public sealed record UpdateSaleCommand : ISaleDetails, IRequest<SaleResult>
+public sealed record UpdateSaleCommand : ISaleDetails, IRequest<SaleResult>, ITransactionalRequest
 {
     public Guid Id { get; init; }
     public DateTime SaleDate { get; init; }

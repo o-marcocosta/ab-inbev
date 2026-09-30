@@ -1,4 +1,6 @@
+using Ambev.DeveloperEvaluation.Application.Common.Messaging;
 using Ambev.DeveloperEvaluation.Application.Sales.Common;
+using Ambev.DeveloperEvaluation.Application.Sales.Events;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Domain.ValueObjects;
 using AutoMapper;
@@ -11,11 +13,13 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
 public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, SaleResult>
 {
     private readonly ISaleRepository _saleRepository;
+    private readonly IOutbox _outbox;
     private readonly IMapper _mapper;
 
-    public UpdateSaleHandler(ISaleRepository saleRepository, IMapper mapper)
+    public UpdateSaleHandler(ISaleRepository saleRepository, IOutbox outbox, IMapper mapper)
     {
         _saleRepository = saleRepository;
+        _outbox = outbox;
         _mapper = mapper;
     }
 
@@ -29,6 +33,8 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, SaleResult>
             new BranchRef(command.BranchId, command.BranchName));
 
         await _saleRepository.UpdateAsync(sale, cancellationToken);
+        _outbox.Add(SaleIntegrationEvents.Modified(sale));
+
         return _mapper.Map<SaleResult>(sale);
     }
 }

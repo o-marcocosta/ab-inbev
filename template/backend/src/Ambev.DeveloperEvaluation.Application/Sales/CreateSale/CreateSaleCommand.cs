@@ -1,9 +1,10 @@
+using Ambev.DeveloperEvaluation.Application.Common.Persistence;
 using Ambev.DeveloperEvaluation.Application.Sales.Common;
 using MediatR;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 
-public sealed record CreateSaleCommand : ISaleDetails, IRequest<SaleResult>
+public sealed record CreateSaleCommand : ISaleDetails, IRequest<SaleResult>, ITransactionalRequest
 {
     public DateTime SaleDate { get; init; }
     public Guid CustomerId { get; init; }

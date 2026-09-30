@@ -1,5 +1,6 @@
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.ORM.Interceptors;
+using Ambev.DeveloperEvaluation.ORM.Outbox;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
@@ -9,6 +10,7 @@ public class DefaultContext : DbContext
 {
     public DbSet<User> Users { get; set; }
     public DbSet<Sale> Sales { get; set; }
+    public DbSet<OutboxMessage> OutboxMessages { get; set; }
 
     public DefaultContext(DbContextOptions<DefaultContext> options) : base(options)
     {

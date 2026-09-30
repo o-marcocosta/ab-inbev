@@ -1,4 +1,6 @@
+using Ambev.DeveloperEvaluation.Application.Common.Messaging;
 using Ambev.DeveloperEvaluation.Application.Sales.Common;
+using Ambev.DeveloperEvaluation.Application.Sales.Events;
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Domain.ValueObjects;
@@ -12,11 +14,13 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, SaleResult>
 {
     private readonly ISaleRepository _saleRepository;
+    private readonly IOutbox _outbox;
     private readonly IMapper _mapper;
 
-    public CreateSaleHandler(ISaleRepository saleRepository, IMapper mapper)
+    public CreateSaleHandler(ISaleRepository saleRepository, IOutbox outbox, IMapper mapper)
     {
         _saleRepository = saleRepository;
+        _outbox = outbox;
         _mapper = mapper;
     }
 
@@ -31,6 +35,8 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, SaleResult>
             sale.AddItem(new ProductRef(item.ProductId, item.ProductName), item.Quantity, item.UnitPrice);
 
         var created = await _saleRepository.CreateAsync(sale, cancellationToken);
+        _outbox.Add(SaleIntegrationEvents.Created(created));
+
         return _mapper.Map<SaleResult>(created);
     }
 }
