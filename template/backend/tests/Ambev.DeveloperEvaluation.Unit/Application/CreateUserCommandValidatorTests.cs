@@ -39,6 +39,19 @@ public class CreateUserCommandValidatorTests
         result.ShouldHaveValidationErrorFor(c => c.Role);
     }
 
+    [Theory(DisplayName = "Username outside 3-50 characters should fail validation")]
+    [InlineData("ab")]
+    [InlineData("abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijk")]
+    public void Given_UsernameOutOfLengthRange_When_Validated_Then_ShouldHaveError(string username)
+    {
+        var command = CreateUserHandlerTestData.GenerateValidCommand();
+        command.Username = username;
+
+        var result = _validator.TestValidate(command);
+
+        result.ShouldHaveValidationErrorFor(c => c.Username);
+    }
+
     [Theory(DisplayName = "Undefined status or role should fail validation")]
     [InlineData(UserStatus.Unknown, UserRole.Customer)]
     [InlineData(UserStatus.Active, UserRole.None)]
