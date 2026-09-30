@@ -9,7 +9,7 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities;
 /// Represents a user in the system with authentication and profile information.
 /// Input validation is performed by the Application command validators.
 /// </summary>
-public class User : BaseEntity, IUser
+public class User : AuditableEntity, IUser
 {
     /// <summary>
     /// Gets the user's username.
@@ -27,7 +27,7 @@ public class User : BaseEntity, IUser
     /// Gets the user's phone number.
     /// Must follow the E.164 international format (e.g. +5511999999999).
     /// </summary>
-    public string Phone { get; set; } = string.Empty ;
+    public string Phone { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets the hashed password for authentication.
@@ -40,23 +40,13 @@ public class User : BaseEntity, IUser
     /// Gets the user's role in the system.
     /// Determines the user's permissions and access levels.
     /// </summary>
-    public UserRole Role { get;     set; }
+    public UserRole Role { get; set; }
 
     /// <summary>
     /// Gets the user's current status.
     /// Indicates whether the user is active, inactive, or suspended in the system.
     /// </summary>
     public UserStatus Status { get; set; }
-
-    /// <summary>
-    /// Gets the date and time when the user was created.
-    /// </summary>
-    public DateTime CreatedAt { get; set; }
-
-    /// <summary>
-    /// Gets the date and time of the last update to the user's information.
-    /// </summary>
-    public DateTime? UpdatedAt { get; set; }
 
     /// <summary>
     /// Gets the unique identifier of the user.
@@ -77,21 +67,12 @@ public class User : BaseEntity, IUser
     string IUser.Role => Role.ToString();
 
     /// <summary>
-    /// Initializes a new instance of the User class.
-    /// </summary>
-    public User()
-    {
-        CreatedAt = DateTime.UtcNow;
-    }
-
-    /// <summary>
     /// Activates the user account.
     /// Changes the user's status to Active.
     /// </summary>
     public void Activate()
     {
         Status = UserStatus.Active;
-        UpdatedAt = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -101,7 +82,6 @@ public class User : BaseEntity, IUser
     public void Deactivate()
     {
         Status = UserStatus.Inactive;
-        UpdatedAt = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -111,6 +91,5 @@ public class User : BaseEntity, IUser
     public void Suspend()
     {
         Status = UserStatus.Suspended;
-        UpdatedAt = DateTime.UtcNow;
     }
 }

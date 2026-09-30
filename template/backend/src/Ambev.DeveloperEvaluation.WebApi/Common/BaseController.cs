@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Ambev.DeveloperEvaluation.Domain.Common.Querying;
+using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Common;
@@ -28,13 +29,13 @@ public class BaseController : ControllerBase
     protected IActionResult NotFound(string message = "Resource not found") =>
         base.NotFound(new ApiResponse { Message = message, Success = false });
 
-    protected IActionResult OkPaginated<T>(PaginatedList<T> pagedList) =>
+    protected IActionResult OkPaginated<T>(PagedResult<T> page) =>
             base.Ok(new PaginatedResponse<T>
             {
-                Data = pagedList,
-                CurrentPage = pagedList.CurrentPage,
-                TotalPages = pagedList.TotalPages,
-                TotalCount = pagedList.TotalCount,
+                Data = page.Items,
+                CurrentPage = page.Page,
+                TotalPages = page.TotalPages,
+                TotalItems = page.TotalCount,
                 Success = true
             });
 }

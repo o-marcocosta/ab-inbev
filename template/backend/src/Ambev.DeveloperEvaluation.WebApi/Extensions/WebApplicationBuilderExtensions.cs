@@ -1,7 +1,8 @@
 using Ambev.DeveloperEvaluation.Application;
-using Ambev.DeveloperEvaluation.Common.Validation;
 using Ambev.DeveloperEvaluation.WebApi.Common;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.OpenApi.Models;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Extensions;
 
@@ -13,27 +14,62 @@ public static class WebApplicationBuilderExtensions
     /// </summary>
     public static WebApplicationBuilder AddWebApiServices(this WebApplicationBuilder builder)
     {
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
-
         builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(ApplicationLayer).Assembly);
-
-        // Replace System.Text.Json exception text (internal type names, byte positions) with a generic message;
-        // the ModelState key still points to the offending field.
-        builder.Services.Configure<JsonOptions>(options => options.AllowInputFormatterExceptionMessages = false);
-
-        // Model binding failures (malformed JSON, wrong types) use the same error shape as command validation.
-        builder.Services.Configure<ApiBehaviorOptions>(options =>
-            options.InvalidModelStateResponseFactory = context =>
-                new BadRequestObjectResult(ApiErrorResponse.ValidationError(
-                    context.ModelState
-                        .Where(entry => entry.Value is { Errors.Count: > 0 })
-                        .SelectMany(entry => entry.Value!.Errors.Select(error => new ValidationErrorDetail
-                        {
-                            Error = entry.Key,
-                            Detail = string.IsNullOrEmpty(error.ErrorMessage) ? "The value is invalid." : error.ErrorMessage
-                        })))));
+        builder.Services.AddSwaggerWithBearerAuth();
+        builder.Services.AddUnauthorizedErrorResponse();
+        builder.Services.AddModelBindingErrorResponse();
 
         return builder;
     }
+
+    private static void AddSwaggerWithBearerAuth(this IServiceCollection services)
+    {
+        var bearerScheme = new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = JwtBearerDefaults.AuthenticationScheme,
+            BearerFormat = "JWT",
+            Description = "Token returned by POST /api/auth."
+        };
+
+        var bearerReference = new OpenApiSecurityScheme
+        {
+            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = JwtBearerDefaults.AuthenticationScheme }
+        };
+
+        services.AddSwaggerGen(options =>
+        {
+            options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, bearerScheme);
+            options.AddSecurityRequirement(new OpenApiSecurityRequirement { [bearerReference] = Array.Empty<string>() });
+        });
+    }
+
+    /// <summary>
+    /// Unauthenticated requests get the same error shape as every other failure instead of an empty 401.
+    /// </summary>
+    private static void AddUnauthorizedErrorResponse(this IServiceCollection services) =>
+        services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
+            options.Events = new JwtBearerEvents { OnChallenge = WriteUnauthorizedAsync });
+
+    private static Task WriteUnauthorizedAsync(JwtBearerChallengeContext context)
+    {
+        var error = new ApiErrorResponse
+        {
+            Type = "AuthenticationError",
+            Error = "Unauthorized",
+            Detail = "A valid bearer token is required."
+        };
+
+        context.HandleResponse();
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        return context.Response.WriteAsJsonAsync(error);
+    }
+
+    /// <summary>
+    /// Model binding failures (malformed JSON, wrong types) use the same error shape as command validation.
+    /// </summary>
+    private static void AddModelBindingErrorResponse(this IServiceCollection services) =>
+        services.Configure<ApiBehaviorOptions>(options =>
+            options.InvalidModelStateResponseFactory = context =>
+                new BadRequestObjectResult(ApiErrorResponse.FromModelState(context.ModelState)));
 }
