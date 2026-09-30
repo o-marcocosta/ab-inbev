@@ -1,5 +1,7 @@
+using Ambev.DeveloperEvaluation.Application.Common.Messaging;
 using Ambev.DeveloperEvaluation.Application.Sales.AdjustSaleItemQuantity;
 using Ambev.DeveloperEvaluation.Application.Sales.Common;
+using Ambev.DeveloperEvaluation.Application.Sales.Events;
 using Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Exceptions;
@@ -17,6 +19,7 @@ namespace Ambev.DeveloperEvaluation.Unit.Application;
 public class SaleHandlersConcurrencyTests
 {
     private readonly ISaleRepository _saleRepository = Substitute.For<ISaleRepository>();
+    private readonly IOutbox _outbox = Substitute.For<IOutbox>();
     private readonly IMapper _mapper = new MapperConfiguration(cfg => cfg.AddProfile<SaleResultProfile>()).CreateMapper();
 
     [Fact(DisplayName = "Sale result mapping should be valid")]
@@ -40,7 +43,7 @@ public class SaleHandlersConcurrencyTests
         _saleRepository.UpdateAsync(stale, Arg.Any<CancellationToken>())
             .ThrowsAsync(new ConcurrencyConflictException("changed"));
 
-        var handler = new AdjustSaleItemQuantityHandler(_saleRepository, _mapper);
+        var handler = new AdjustSaleItemQuantityHandler(_saleRepository, _outbox, _mapper);
 
         // When
         var result = await handler.Handle(
@@ -49,6 +52,9 @@ public class SaleHandlersConcurrencyTests
         // Then: both changes are kept (7 + 1), not overwritten (5 + 1).
         result.Items.Single().Quantity.Should().Be(8);
         await _saleRepository.Received(1).UpdateAsync(current, Arg.Any<CancellationToken>());
+
+        // Only the attempt that saved announces the change, with the final state.
+        _outbox.Received(1).Add(Arg.Is<SaleModifiedIntegrationEvent>(e => e.Items.Single().Quantity == 8));
     }
 
     [Fact(DisplayName = "Adjusting quantity should give up after the maximum number of attempts")]
@@ -62,13 +68,14 @@ public class SaleHandlersConcurrencyTests
         _saleRepository.UpdateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new ConcurrencyConflictException("changed"));
 
-        var handler = new AdjustSaleItemQuantityHandler(_saleRepository, _mapper);
+        var handler = new AdjustSaleItemQuantityHandler(_saleRepository, _outbox, _mapper);
 
         var act = () => handler.Handle(
             new AdjustSaleItemQuantityCommand { SaleId = sale.Id, ItemId = itemId, Delta = 1 }, CancellationToken.None);
 
         await act.Should().ThrowAsync<ConcurrencyConflictException>();
         await _saleRepository.Received(3).UpdateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>());
+        _outbox.DidNotReceiveWithAnyArgs().Add(default!);
     }
 
     [Fact(DisplayName = "Adjusting an unknown item should return not found")]
@@ -77,7 +84,7 @@ public class SaleHandlersConcurrencyTests
         var sale = BuildSale(SaleTestData.GenerateProduct(), 5);
         _saleRepository.GetByIdAsync(sale.Id, Arg.Any<CancellationToken>()).Returns(sale);
 
-        var handler = new AdjustSaleItemQuantityHandler(_saleRepository, _mapper);
+        var handler = new AdjustSaleItemQuantityHandler(_saleRepository, _outbox, _mapper);
 
         var act = () => handler.Handle(
             new AdjustSaleItemQuantityCommand { SaleId = sale.Id, ItemId = Guid.NewGuid(), Delta = 1 }, CancellationToken.None);
@@ -106,10 +113,11 @@ public class SaleHandlersConcurrencyTests
             BranchName = branch.Name
         };
 
-        var act = () => new UpdateSaleHandler(_saleRepository, _mapper).Handle(command, CancellationToken.None);
+        var act = () => new UpdateSaleHandler(_saleRepository, _outbox, _mapper).Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<ConcurrencyConflictException>();
         await _saleRepository.Received(1).UpdateAsync(sale, Arg.Any<CancellationToken>());
+        _outbox.DidNotReceiveWithAnyArgs().Add(default!);
     }
 
     private static Sale BuildSale(ProductRef product, int quantity)
