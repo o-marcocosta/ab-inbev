@@ -49,6 +49,12 @@ public class ExceptionHandlingMiddleware
     {
         ValidationException validation => (StatusCodes.Status400BadRequest,
             ApiErrorResponse.ValidationError(validation.Errors.Select(e => (ValidationErrorDetail)e))),
+        InvalidQueryException invalidQuery => (StatusCodes.Status400BadRequest, new ApiErrorResponse
+        {
+            Type = "InvalidQuery",
+            Error = "Invalid query parameters",
+            Detail = invalidQuery.Message
+        }),
         DomainException domain => (StatusCodes.Status400BadRequest, new ApiErrorResponse
         {
             Type = "BusinessRuleViolation",
