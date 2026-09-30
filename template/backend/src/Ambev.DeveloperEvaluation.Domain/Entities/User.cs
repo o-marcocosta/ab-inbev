@@ -11,7 +11,7 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities;
 /// Represents a user in the system with authentication and profile information.
 /// This entity follows domain-driven design principles and includes business rules validation.
 /// </summary>
-public class User : BaseEntity, IUser
+public class User : AuditableEntity, IUser
 {
     /// <summary>
     /// Gets the user's username.
@@ -51,16 +51,6 @@ public class User : BaseEntity, IUser
     public UserStatus Status { get; set; }
 
     /// <summary>
-    /// Gets the date and time when the user was created.
-    /// </summary>
-    public DateTime CreatedAt { get; set; }
-
-    /// <summary>
-    /// Gets the date and time of the last update to the user's information.
-    /// </summary>
-    public DateTime? UpdatedAt { get; set; }
-
-    /// <summary>
     /// Gets the unique identifier of the user.
     /// </summary>
     /// <returns>The user's ID as a string.</returns>
@@ -77,14 +67,6 @@ public class User : BaseEntity, IUser
     /// </summary>
     /// <returns>The user's role as a string.</returns>
     string IUser.Role => Role.ToString();
-
-    /// <summary>
-    /// Initializes a new instance of the User class.
-    /// </summary>
-    public User()
-    {
-        CreatedAt = DateTime.UtcNow;
-    }
 
     /// <summary>
     /// Performs validation of the user entity using the UserValidator rules.
@@ -121,7 +103,6 @@ public class User : BaseEntity, IUser
     public void Activate()
     {
         Status = UserStatus.Active;
-        UpdatedAt = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -131,7 +112,6 @@ public class User : BaseEntity, IUser
     public void Deactivate()
     {
         Status = UserStatus.Inactive;
-        UpdatedAt = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -141,6 +121,5 @@ public class User : BaseEntity, IUser
     public void Suspend()
     {
         Status = UserStatus.Suspended;
-        UpdatedAt = DateTime.UtcNow;
     }
 }
