@@ -1,6 +1,9 @@
+using Ambev.DeveloperEvaluation.Domain.Common.Querying;
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Exceptions;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
+using Ambev.DeveloperEvaluation.ORM.Querying;
+using Ambev.DeveloperEvaluation.ORM.Querying.FieldMaps;
 using Microsoft.EntityFrameworkCore;
 
 namespace Ambev.DeveloperEvaluation.ORM.Repositories;
@@ -26,6 +29,21 @@ public class SaleRepository : ISaleRepository
         return await _context.Sales
             .Include(s => s.Items)
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+    }
+
+    public async Task<PagedResult<Sale>> ListAsync(QueryOptions options, CancellationToken cancellationToken = default)
+    {
+        var query = _context.Sales.AsNoTracking().ApplyFiltering(options.Filters, SaleFieldMap.Fields);
+
+        // Counted after filtering and before paging, so the total reflects every matching sale.
+        var totalCount = await query.CountAsync(cancellationToken);
+        var sales = await query
+            .ApplySorting(options.Sorts, SaleFieldMap.Fields, s => s.SaleNumber)
+            .ApplyPagination(options.Page, options.Size)
+            .Include(s => s.Items)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<Sale>(sales, totalCount, options.Page, options.Size);
     }
 
     public async Task UpdateAsync(Sale sale, CancellationToken cancellationToken = default)

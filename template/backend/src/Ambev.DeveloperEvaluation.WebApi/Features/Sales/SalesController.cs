@@ -5,8 +5,10 @@ using Ambev.DeveloperEvaluation.Application.Sales.CancelSaleItem;
 using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 using Ambev.DeveloperEvaluation.Application.Sales.DeleteSale;
 using Ambev.DeveloperEvaluation.Application.Sales.GetSale;
+using Ambev.DeveloperEvaluation.Application.Sales.ListSales;
 using Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
 using Ambev.DeveloperEvaluation.WebApi.Common;
+using Ambev.DeveloperEvaluation.WebApi.Common.Querying;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.AddSaleItem;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.AdjustSaleItemQuantity;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.Common;
@@ -46,6 +48,17 @@ public class SalesController : BaseController
 
         var data = _mapper.Map<SaleResponse>(result);
         return Created(nameof(GetSale), new { id = data.Id }, data, "Sale created successfully");
+    }
+
+    [HttpGet]
+    [ProducesResponseType(typeof(PaginatedResponse<SaleResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ListSales(CancellationToken cancellationToken)
+    {
+        var options = QueryOptionsParser.Parse(Request.Query);
+        var result = await _mediator.Send(new ListSalesQuery(options), cancellationToken);
+
+        return OkPaginated(result.Map(sales => _mapper.Map<List<SaleResponse>>(sales)));
     }
 
     [HttpGet("{id:guid}")]
