@@ -1,4 +1,5 @@
 using Ambev.DeveloperEvaluation.Application;
+using Ambev.DeveloperEvaluation.Application.Common.Persistence;
 using Ambev.DeveloperEvaluation.Common.Security;
 using Ambev.DeveloperEvaluation.Common.Validation;
 using FluentValidation;
@@ -17,6 +18,8 @@ public class ApplicationModuleInitializer : IModuleInitializer
         builder.Services.AddValidatorsFromAssembly(typeof(ApplicationLayer).Assembly);
 
         builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ApplicationLayer).Assembly));
+        // Registration order is execution order: invalid commands are rejected before a transaction is opened.
         builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));
     }
 }
