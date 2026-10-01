@@ -9,15 +9,29 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
       - ConnectionStrings__DefaultConnection=Host=ambev.developerevaluation.database;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
-      - ConnectionStrings__RabbitMq=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@ambev.developerevaluation.broker:5672
       - Jwt__SecretKey=${JWT_SECRET_KEY}
     ports:
       - "8080:8080"
     depends_on:
       ambev.developerevaluation.database:
         condition: service_healthy
+
+  ambev.developerevaluation.outboxworker:
+    container_name: ambev_developer_evaluation_outbox_worker
+    image: ${DOCKER_REGISTRY-}ambevdeveloperevaluationoutboxworker
+    build:
+      context: .
+      dockerfile: src/Ambev.DeveloperEvaluation.OutboxWorker/Dockerfile
+    environment:
+      - DOTNET_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=ambev.developerevaluation.database;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - ConnectionStrings__RabbitMq=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@ambev.developerevaluation.broker:5672
+    depends_on:
+      ambev.developerevaluation.database:
+        condition: service_healthy
       ambev.developerevaluation.broker:
         condition: service_healthy
+    restart: unless-stopped
 
   ambev.developerevaluation.database:
     container_name: ambev_developer_evaluation_database
