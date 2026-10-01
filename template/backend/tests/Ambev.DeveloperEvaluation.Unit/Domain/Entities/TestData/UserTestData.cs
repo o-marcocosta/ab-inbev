@@ -7,7 +7,7 @@ namespace Ambev.DeveloperEvaluation.Unit.Domain.Entities.TestData;
 /// <summary>
 /// Provides methods for generating test data using the Bogus library.
 /// This class centralizes all test data generation to ensure consistency
-/// across test cases and provide both valid and invalid data scenarios.
+/// across test cases.
 /// </summary>
 public static class UserTestData
 {
@@ -94,60 +94,5 @@ public static class UserTestData
     public static string GenerateValidUsername()
     {
         return new Faker().Internet.UserName();
-    }
-
-    /// <summary>
-    /// Generates an invalid email address for testing negative scenarios.
-    /// The generated email will:
-    /// - Not follow the standard email format
-    /// - Not contain the @ symbol
-    /// - Be a simple word or string
-    /// This is useful for testing email validation error cases.
-    /// </summary>
-    /// <returns>An invalid email address.</returns>
-    public static string GenerateInvalidEmail()
-    {
-        var faker = new Faker();
-        return faker.Lorem.Word();
-    }
-
-    /// <summary>
-    /// Generates an invalid password for testing negative scenarios.
-    /// The generated password will:
-    /// - Not meet the minimum length requirement
-    /// - Not contain all required character types
-    /// This is useful for testing password validation error cases.
-    /// </summary>
-    /// <returns>An invalid password.</returns>
-    public static string GenerateInvalidPassword()
-    {
-        return new Faker().Lorem.Word();
-    }
-
-    /// <summary>
-    /// Generates an invalid phone number for testing negative scenarios.
-    /// The generated phone number will:
-    /// - Not follow the Brazilian phone number format
-    /// - Not have the correct length
-    /// - Not start with the country code
-    /// This is useful for testing phone validation error cases.
-    /// </summary>
-    /// <returns>An invalid phone number.</returns>
-    public static string GenerateInvalidPhone()
-    {
-        return new Faker().Random.AlphaNumeric(5);
-    }
-
-    /// <summary>
-    /// Generates a username that exceeds the maximum length limit.
-    /// The generated username will:
-    /// - Be longer than 50 characters
-    /// - Contain random alphanumeric characters
-    /// This is useful for testing username length validation error cases.
-    /// </summary>
-    /// <returns>A username that exceeds the maximum length limit.</returns>
-    public static string GenerateLongUsername()
-    {
-        return new Faker().Random.String2(51);
     }
 }

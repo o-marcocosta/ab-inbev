@@ -1,4 +1,4 @@
-﻿using Ambev.DeveloperEvaluation.Domain.Enums;
+using Ambev.DeveloperEvaluation.Domain.Enums;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Users.CreateUser;
 
@@ -18,7 +18,7 @@ public class CreateUserRequest
     public string Password { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the phone number in format (XX) XXXXX-XXXX.
+    /// Gets or sets the phone number in E.164 international format (e.g. +5511999999999).
     /// </summary>
     public string Phone { get; set; } = string.Empty;
 
