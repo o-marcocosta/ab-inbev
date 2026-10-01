@@ -16,6 +16,23 @@ services:
       ambev.developerevaluation.database:
         condition: service_healthy
 
+  ambev.developerevaluation.outboxworker:
+    container_name: ambev_developer_evaluation_outbox_worker
+    image: ${DOCKER_REGISTRY-}ambevdeveloperevaluationoutboxworker
+    build:
+      context: .
+      dockerfile: src/Ambev.DeveloperEvaluation.OutboxWorker/Dockerfile
+    environment:
+      - DOTNET_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=ambev.developerevaluation.database;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - ConnectionStrings__RabbitMq=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@ambev.developerevaluation.broker:5672
+    depends_on:
+      ambev.developerevaluation.database:
+        condition: service_healthy
+      ambev.developerevaluation.broker:
+        condition: service_healthy
+    restart: unless-stopped
+
   ambev.developerevaluation.database:
     container_name: ambev_developer_evaluation_database
     image: postgres:13
@@ -34,5 +51,25 @@ services:
       retries: 10
     restart: unless-stopped
 
+  ambev.developerevaluation.broker:
+    container_name: ambev_developer_evaluation_broker
+    image: rabbitmq:4-management
+    hostname: ambev-broker
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "${RABBITMQ_HOST_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
 volumes:
   postgres-data:
+  rabbitmq-data:
