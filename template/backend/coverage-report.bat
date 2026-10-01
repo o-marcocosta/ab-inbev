@@ -13,7 +13,7 @@ dotnet test Ambev.DeveloperEvaluation.sln --no-restore --verbosity normal ^
 /p:CollectCoverage=true ^
 /p:CoverletOutputFormat=cobertura ^
 /p:CoverletOutput=./TestResults/coverage.cobertura.xml ^
-/p:Exclude="[*]*.Program%2c[*]*.Startup%2c[*]*.Migrations.*"
+/p:Exclude="[*]*.Program%%2c[*]*.Startup%%2c[*]*.Migrations.*"
 
 REM Generate coverage report
 reportgenerator ^
